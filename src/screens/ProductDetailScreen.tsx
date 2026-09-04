@@ -6,14 +6,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import StockBadge from '../components/StockBadge';
 import type { RootStackScreenProps } from '../navigation/types';
-import { getProduct } from '../services/api';
-import type { Product } from '../types/product';
+import { getProduct, updateStock } from '../services/api';
+import type { Product, StockMovementType } from '../types/product';
 
 type ProductDetailScreenProps = RootStackScreenProps<'ProductDetail'>;
 
@@ -55,9 +56,16 @@ export default function ProductDetailScreen({
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [movementQuantity, setMovementQuantity] = useState('');
+  const [pendingMovement, setPendingMovement] =
+    useState<StockMovementType | null>(null);
+  const [stockError, setStockError] = useState<string | null>(null);
+  const [stockSuccess, setStockSuccess] = useState<string | null>(null);
 
   const loadProduct = useCallback(async () => {
     setError(null);
+    setStockError(null);
+    setStockSuccess(null);
     setIsLoading(true);
 
     try {
@@ -78,6 +86,54 @@ export default function ProductDetailScreen({
       void loadProduct();
     }, [loadProduct]),
   );
+
+  const handleStockMovement = async (type: StockMovementType) => {
+    if (product === null || pendingMovement !== null) {
+      return;
+    }
+
+    const normalizedQuantity = movementQuantity.trim();
+    const quantity = Number(normalizedQuantity);
+
+    if (
+      !/^\d+$/.test(normalizedQuantity) ||
+      !Number.isSafeInteger(quantity) ||
+      quantity <= 0
+    ) {
+      setStockSuccess(null);
+      setStockError('Saisissez un nombre entier supérieur à zéro.');
+      return;
+    }
+
+    if (type === 'OUT' && quantity > product.quantity) {
+      setStockSuccess(null);
+      setStockError('La quantité à sortir dépasse le stock disponible.');
+      return;
+    }
+
+    setPendingMovement(type);
+    setStockError(null);
+    setStockSuccess(null);
+
+    try {
+      const updatedProduct = await updateStock(product.id, { type, quantity });
+      const movementLabel = type === 'IN' ? 'Entrée' : 'Sortie';
+
+      setProduct(updatedProduct);
+      setMovementQuantity('');
+      setStockSuccess(
+        `${movementLabel} de ${quantity} unité${quantity > 1 ? 's' : ''} enregistrée.`,
+      );
+    } catch (movementError) {
+      setStockError(
+        movementError instanceof Error
+          ? movementError.message
+          : 'Impossible de mettre à jour le stock.',
+      );
+    } finally {
+      setPendingMovement(null);
+    }
+  };
 
   if (isLoading && product === null) {
     return (
@@ -117,6 +173,7 @@ export default function ProductDetailScreen({
     <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
       <ScrollView
         contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heading}>
@@ -138,6 +195,76 @@ export default function ProductDetailScreen({
           <View style={styles.thresholdBlock}>
             <Text style={styles.stockLabel}>Seuil d’alerte</Text>
             <Text style={styles.thresholdValue}>{product.alertThreshold}</Text>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mouvement de stock</Text>
+          <Text style={styles.movementHelp}>
+            Indiquez la quantité à ajouter ou à retirer.
+          </Text>
+          <TextInput
+            accessibilityLabel="Quantité du mouvement de stock"
+            editable={pendingMovement === null}
+            keyboardType="number-pad"
+            onChangeText={(value) => {
+              setMovementQuantity(value);
+              setStockError(null);
+              setStockSuccess(null);
+            }}
+            placeholder="Quantité"
+            placeholderTextColor="#9CA3AF"
+            style={styles.quantityInput}
+            value={movementQuantity}
+          />
+
+          {stockError ? (
+            <Text accessibilityLiveRegion="polite" style={styles.stockError}>
+              {stockError}
+            </Text>
+          ) : null}
+          {stockSuccess ? (
+            <Text accessibilityLiveRegion="polite" style={styles.stockSuccess}>
+              {stockSuccess}
+            </Text>
+          ) : null}
+
+          <View style={styles.movementButtons}>
+            <Pressable
+              accessibilityRole="button"
+              disabled={pendingMovement !== null}
+              onPress={() => void handleStockMovement('IN')}
+              style={({ pressed }) => [
+                styles.movementButton,
+                styles.entryButton,
+                pressed && styles.buttonPressed,
+                pendingMovement !== null && styles.buttonDisabled,
+              ]}
+            >
+              {pendingMovement === 'IN' ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.movementButtonText}>+ Entrée</Text>
+              )}
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              disabled={pendingMovement !== null}
+              onPress={() => void handleStockMovement('OUT')}
+              style={({ pressed }) => [
+                styles.movementButton,
+                styles.exitButton,
+                pressed && styles.buttonPressed,
+                pendingMovement !== null && styles.buttonDisabled,
+              ]}
+            >
+              {pendingMovement === 'OUT' ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.movementButtonText}>− Sortie</Text>
+              )}
+            </Pressable>
           </View>
         </View>
 
@@ -252,6 +379,58 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     marginBottom: 12,
+  },
+  movementHelp: {
+    color: '#6B7280',
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  quantityInput: {
+    backgroundColor: '#F9FAFB',
+    borderColor: '#D1D5DB',
+    borderRadius: 10,
+    borderWidth: 1,
+    color: '#111827',
+    fontSize: 18,
+    minHeight: 48,
+    paddingHorizontal: 14,
+  },
+  movementButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  movementButton: {
+    alignItems: 'center',
+    borderRadius: 10,
+    flex: 1,
+    justifyContent: 'center',
+    minHeight: 48,
+    paddingHorizontal: 12,
+  },
+  entryButton: {
+    backgroundColor: '#15803D',
+  },
+  exitButton: {
+    backgroundColor: '#B91C1C',
+  },
+  movementButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  buttonDisabled: {
+    opacity: 0.55,
+  },
+  stockError: {
+    color: '#B91C1C',
+    fontSize: 14,
+    marginTop: 10,
+  },
+  stockSuccess: {
+    color: '#166534',
+    fontSize: 14,
+    marginTop: 10,
   },
   informationRow: {
     borderTopColor: '#F3F4F6',
