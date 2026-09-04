@@ -16,7 +16,10 @@ export default function AppNavigator() {
         screenOptions={{
           contentStyle: { backgroundColor: '#F6F7F9' },
           headerBackButtonDisplayMode: 'minimal',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: '#F6F7F9' },
           headerTintColor: '#111827',
+          headerTitleStyle: { fontWeight: '700' },
         }}
       >
         <Stack.Screen

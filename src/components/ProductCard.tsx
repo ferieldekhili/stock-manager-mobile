@@ -26,6 +26,9 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
           <Text numberOfLines={1} style={styles.category}>
             {product.category}
           </Text>
+          <Text numberOfLines={1} style={styles.reference}>
+            Réf. {product.reference}
+          </Text>
         </View>
         <StockBadge
           quantity={product.quantity}
@@ -34,11 +37,14 @@ export default function ProductCard({ product, onPress }: ProductCardProps) {
       </View>
 
       <View style={styles.stockInformation}>
-        <Text style={styles.stockLabel}>Quantité</Text>
-        <Text style={styles.stockValue}>{product.quantity}</Text>
-        <Text style={styles.threshold}>
-          Seuil d’alerte : {product.alertThreshold}
-        </Text>
+        <View>
+          <Text style={styles.stockLabel}>Quantité en stock</Text>
+          <Text style={styles.stockValue}>{product.quantity}</Text>
+        </View>
+        <View style={styles.thresholdBlock}>
+          <Text style={styles.stockLabel}>Seuil d’alerte</Text>
+          <Text style={styles.thresholdValue}>{product.alertThreshold}</Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -50,7 +56,7 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     borderRadius: 14,
     borderWidth: 1,
-    minHeight: 132,
+    minHeight: 156,
     overflow: 'hidden',
     padding: 16,
   },
@@ -72,28 +78,38 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   category: {
-    color: '#6B7280',
+    color: '#4B5563',
     fontSize: 14,
     marginTop: 4,
   },
+  reference: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    marginTop: 3,
+  },
   stockInformation: {
-    alignItems: 'baseline',
+    alignItems: 'flex-end',
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 20,
   },
   stockLabel: {
     color: '#6B7280',
-    fontSize: 14,
-    marginRight: 8,
+    fontSize: 12,
   },
   stockValue: {
     color: '#111827',
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '700',
+    marginTop: 2,
   },
-  threshold: {
-    color: '#6B7280',
-    fontSize: 13,
-    marginLeft: 'auto',
+  thresholdBlock: {
+    alignItems: 'flex-end',
+  },
+  thresholdValue: {
+    color: '#374151',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 2,
   },
 });

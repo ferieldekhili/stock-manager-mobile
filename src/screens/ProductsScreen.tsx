@@ -159,7 +159,20 @@ export default function ProductsScreen({ navigation }: ProductsScreenProps) {
               </View>
             ) : null}
 
-            <Text style={styles.filterLabel}>Catégorie</Text>
+            <View style={styles.filterHeading}>
+              <Text style={styles.filterLabel}>Catégorie</Text>
+              {hasActiveFilters ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    setSearchQuery('');
+                    setSelectedCategory(null);
+                  }}
+                >
+                  <Text style={styles.clearFilters}>Réinitialiser</Text>
+                </Pressable>
+              ) : null}
+            </View>
             <ScrollView
               contentContainerStyle={styles.categoryFilters}
               horizontal
@@ -282,12 +295,22 @@ const styles = StyleSheet.create({
   separator: {
     height: 12,
   },
+  filterHeading: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    marginTop: 16,
+  },
   filterLabel: {
     color: '#374151',
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 8,
-    marginTop: 16,
+  },
+  clearFilters: {
+    color: '#2563EB',
+    fontSize: 14,
+    fontWeight: '600',
   },
   categoryFilters: {
     gap: 8,
@@ -299,7 +322,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     justifyContent: 'center',
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: 14,
   },
   categoryButtonSelected: {

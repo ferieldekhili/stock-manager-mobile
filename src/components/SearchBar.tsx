@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 type SearchBarProps = {
@@ -9,8 +10,10 @@ type SearchBarProps = {
 export default function SearchBar({
   value,
   onChangeText,
-  placeholder = 'Nom ou référence',
+  placeholder = 'Rechercher par nom ou référence',
 }: SearchBarProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <View>
       <Text style={styles.label}>Rechercher</Text>
@@ -19,11 +22,13 @@ export default function SearchBar({
         autoCapitalize="none"
         autoCorrect={false}
         clearButtonMode="while-editing"
+        onBlur={() => setIsFocused(false)}
         onChangeText={onChangeText}
+        onFocus={() => setIsFocused(true)}
         placeholder={placeholder}
         placeholderTextColor="#9CA3AF"
         returnKeyType="search"
-        style={styles.input}
+        style={[styles.input, isFocused && styles.inputFocused]}
         value={value}
       />
     </View>
@@ -47,5 +52,8 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 14,
     paddingVertical: 12,
+  },
+  inputFocused: {
+    borderColor: '#2563EB',
   },
 });

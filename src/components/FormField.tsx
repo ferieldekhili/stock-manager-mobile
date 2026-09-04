@@ -1,4 +1,11 @@
-import { StyleSheet, Text, TextInput, type TextInputProps, View } from 'react-native';
+import { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  type TextInputProps,
+  View,
+} from 'react-native';
 
 type FormFieldProps = {
   label: string;
@@ -21,6 +28,8 @@ export default function FormField({
   autoCapitalize,
   multiline = false,
 }: FormFieldProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
@@ -29,12 +38,15 @@ export default function FormField({
         autoCapitalize={autoCapitalize}
         keyboardType={keyboardType}
         multiline={multiline}
+        onBlur={() => setIsFocused(false)}
         onChangeText={onChangeText}
+        onFocus={() => setIsFocused(true)}
         placeholder={placeholder}
         placeholderTextColor="#9CA3AF"
         style={[
           styles.input,
           multiline && styles.multilineInput,
+          isFocused && styles.inputFocused,
           error ? styles.inputError : null,
         ]}
         textAlignVertical={multiline ? 'top' : 'center'}
@@ -72,6 +84,9 @@ const styles = StyleSheet.create({
   },
   multilineInput: {
     minHeight: 104,
+  },
+  inputFocused: {
+    borderColor: '#2563EB',
   },
   inputError: {
     borderColor: '#DC2626',
