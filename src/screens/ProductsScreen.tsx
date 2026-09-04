@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -11,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ProductCard from '../components/ProductCard';
+import SearchBar from '../components/SearchBar';
 import type { RootStackScreenProps } from '../navigation/types';
 import { getProducts } from '../services/api';
 import type { Product } from '../types/product';
@@ -21,6 +23,35 @@ export default function ProductsScreen({ navigation }: ProductsScreenProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const categories = useMemo(
+    () =>
+      Array.from(new Set(products.map((product) => product.category))).sort(
+        (firstCategory, secondCategory) =>
+          firstCategory.localeCompare(secondCategory, 'fr'),
+      ),
+    [products],
+  );
+
+  const filteredProducts = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return products.filter((product) => {
+      const matchesCategory =
+        selectedCategory === null || product.category === selectedCategory;
+      const matchesSearch =
+        normalizedQuery.length === 0 ||
+        product.name.toLowerCase().includes(normalizedQuery) ||
+        product.reference.toLowerCase().includes(normalizedQuery);
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [products, searchQuery, selectedCategory]);
+
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 || selectedCategory !== null;
 
   const loadProducts = useCallback(async () => {
     setError(null);
@@ -82,40 +113,102 @@ export default function ProductsScreen({ navigation }: ProductsScreenProps) {
       <FlatList
         contentContainerStyle={[
           styles.listContent,
-          products.length === 0 && styles.emptyListContent,
+          filteredProducts.length === 0 && styles.emptyListContent,
         ]}
-        data={products}
+        data={filteredProducts}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         keyExtractor={(product) => product.id}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.stateTitle}>Aucun produit</Text>
+            <Text style={styles.stateTitle}>
+              {hasActiveFilters ? 'Aucun résultat' : 'Aucun produit'}
+            </Text>
             <Text style={styles.stateMessage}>
-              Ajoutez votre premier produit pour commencer à gérer le stock.
+              {hasActiveFilters
+                ? 'Modifiez la recherche ou choisissez une autre catégorie.'
+                : 'Ajoutez votre premier produit pour commencer à gérer le stock.'}
             </Text>
           </View>
         }
         ListHeaderComponent={
-          <View style={styles.header}>
-            <View style={styles.headerText}>
-              <Text style={styles.title}>Gestion du stock</Text>
-              <Text style={styles.subtitle}>
-                {products.length} produit{products.length > 1 ? 's' : ''}
-              </Text>
+          <View style={styles.listHeader}>
+            <View style={styles.header}>
+              <View style={styles.headerText}>
+                <Text style={styles.title}>Gestion du stock</Text>
+                <Text style={styles.subtitle}>
+                  {filteredProducts.length} produit
+                  {filteredProducts.length !== 1 ? 's' : ''} affiché
+                  {filteredProducts.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <Pressable
+                accessibilityLabel="Créer un produit"
+                accessibilityRole="button"
+                onPress={() =>
+                  navigation.navigate('ProductForm', { mode: 'create' })
+                }
+                style={({ pressed }) => [
+                  styles.createButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Text style={styles.createButtonText}>Ajouter</Text>
+              </Pressable>
             </View>
-            <Pressable
-              accessibilityLabel="Créer un produit"
-              accessibilityRole="button"
-              onPress={() =>
-                navigation.navigate('ProductForm', { mode: 'create' })
-              }
-              style={({ pressed }) => [
-                styles.createButton,
-                pressed && styles.buttonPressed,
-              ]}
+
+            <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+
+            <Text style={styles.filterLabel}>Catégorie</Text>
+            <ScrollView
+              contentContainerStyle={styles.categoryFilters}
+              horizontal
+              showsHorizontalScrollIndicator={false}
             >
-              <Text style={styles.createButtonText}>Ajouter</Text>
-            </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedCategory === null }}
+                onPress={() => setSelectedCategory(null)}
+                style={[
+                  styles.categoryButton,
+                  selectedCategory === null && styles.categoryButtonSelected,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.categoryButtonText,
+                    selectedCategory === null &&
+                      styles.categoryButtonTextSelected,
+                  ]}
+                >
+                  Toutes
+                </Text>
+              </Pressable>
+              {categories.map((category) => {
+                const isSelected = selectedCategory === category;
+
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    key={category}
+                    onPress={() => setSelectedCategory(category)}
+                    style={[
+                      styles.categoryButton,
+                      isSelected && styles.categoryButtonSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryButtonText,
+                        isSelected && styles.categoryButtonTextSelected,
+                      ]}
+                    >
+                      {category}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
           </View>
         }
         onRefresh={() => void loadProducts()}
@@ -145,6 +238,9 @@ const styles = StyleSheet.create({
   },
   emptyListContent: {
     flexGrow: 1,
+  },
+  listHeader: {
+    marginBottom: 20,
   },
   header: {
     alignItems: 'center',
@@ -184,6 +280,38 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 12,
+  },
+  filterLabel: {
+    color: '#374151',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  categoryFilters: {
+    gap: 8,
+    paddingRight: 20,
+  },
+  categoryButton: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#D1D5DB',
+    borderRadius: 999,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 40,
+    paddingHorizontal: 14,
+  },
+  categoryButtonSelected: {
+    backgroundColor: '#DBEAFE',
+    borderColor: '#2563EB',
+  },
+  categoryButtonText: {
+    color: '#4B5563',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  categoryButtonTextSelected: {
+    color: '#1D4ED8',
   },
   centeredState: {
     alignItems: 'center',
