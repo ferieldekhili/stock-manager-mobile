@@ -172,7 +172,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
       >
         <View style={styles.greetingCard}>
           <Text style={styles.greeting}>
-            Bonjour Madame Amira Toumi, est-ce que vous allez bien aujourd’hui ?
+            Bonjour, est-ce que vous allez bien aujourd’hui ?
           </Text>
           <Text style={styles.greetingSubtitle}>
             Voici la situation actuelle de votre stock.
