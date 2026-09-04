@@ -8,6 +8,8 @@ ainsi que de créer ou modifier un produit.
 ## Fonctionnalités
 
 - Liste des produits avec quantité, seuil d’alerte et statut visuel.
+- Tableau de bord avec indicateurs, alertes prioritaires et répartition par
+  catégorie.
 - Recherche par nom ou référence et filtre par catégorie.
 - Détail complet d’un produit.
 - Entrées et sorties de stock avec protection contre les stocks négatifs.
@@ -49,7 +51,7 @@ Expo 57.0.20 et Prisma 6.12.
 ├── src/
 │   ├── components/           # Composants réutilisables
 │   ├── navigation/           # Routes React Navigation typées
-│   ├── screens/              # Liste, détail et formulaire
+│   ├── screens/              # Tableau de bord, liste, détail et formulaire
 │   ├── services/             # Client HTTP centralisé
 │   ├── types/                # Types du domaine produit
 │   └── utils/                # Calcul du statut de stock
@@ -200,16 +202,16 @@ temporaire est supprimé automatiquement à la fin.
 ## Choix techniques
 
 - L’état reste local aux écrans avec `useState` : un store global ajouterait de
-  la complexité sans bénéfice pour trois écrans.
+  la complexité sans bénéfice pour ce projet.
 - Les appels HTTP sont regroupés dans un service `fetch` unique et configurable.
 - Les responsabilités de l’API sont séparées entre routes, contrôleurs et
   services sans multiplier les couches.
 - MySQL garantit la persistance, l’unicité des références et des quantités non
   négatives. La sortie de stock est atomique pour éviter une course entre deux
   requêtes.
-- Le tableau de bord et les notifications, indiqués comme bonus dans l’énoncé,
-  ne sont volontairement pas inclus afin de privilégier les fonctionnalités
-  principales et la clarté du code.
+- Les notifications locales, indiquées comme bonus dans l’énoncé, ne sont pas
+  incluses afin de conserver une application simple et centrée sur la gestion du
+  stock.
 
 ## Captures d’écran
 
@@ -217,6 +219,7 @@ Les captures réelles du dernier test sur iPhone seront déposées dans
 `docs/screenshots/` avant l’envoi du dépôt :
 
 - `products.png` — liste, recherche et filtres ;
+- `dashboard.png` — indicateurs et alertes prioritaires ;
 - `product-detail.png` — détail et mouvement de stock ;
 - `product-form.png` — formulaire de création.
 

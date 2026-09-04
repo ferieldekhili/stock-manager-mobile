@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import DashboardScreen from '../screens/DashboardScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import ProductFormScreen from '../screens/ProductFormScreen';
 import ProductsScreen from '../screens/ProductsScreen';
@@ -12,7 +13,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Products"
+        initialRouteName="Dashboard"
         screenOptions={{
           contentStyle: { backgroundColor: '#F6F7F9' },
           headerBackButtonDisplayMode: 'minimal',
@@ -22,6 +23,11 @@ export default function AppNavigator() {
           headerTitleStyle: { fontWeight: '700' },
         }}
       >
+        <Stack.Screen
+          name="Dashboard"
+          component={DashboardScreen}
+          options={{ title: 'Tableau de bord' }}
+        />
         <Stack.Screen
           name="Products"
           component={ProductsScreen}
