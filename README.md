@@ -13,7 +13,7 @@ ainsi que de créer ou modifier un produit.
 - Entrées et sorties de stock avec protection contre les stocks négatifs.
 - Création et modification avec validation des champs.
 - États de chargement, liste vide et erreurs réseau avec nouvelle tentative.
-- API REST connectée à une véritable base PostgreSQL.
+- API REST connectée à une véritable base MySQL.
 
 | Statut | Règle |
 | --- | --- |
@@ -36,7 +36,7 @@ ainsi que de créer ou modifier un produit.
 - Node.js et Express 5
 - TypeScript
 - Prisma 6
-- PostgreSQL
+- MySQL 8
 
 Versions utilisées pendant le développement : Node.js 24.15, npm 11.12,
 Expo 57.0.20 et Prisma 6.12.
@@ -65,7 +65,8 @@ Expo 57.0.20 et Prisma 6.12.
 
 ## Installation
 
-Prérequis : Node.js, npm, PostgreSQL et Expo Go sur le téléphone.
+Prérequis : Node.js, npm, MySQL Server 8 et Expo Go sur le téléphone. MySQL
+Workbench peut être utilisé pour administrer la base graphiquement.
 
 ```bash
 git clone https://github.com/ferieldekhili/stock-manager-mobile.git
@@ -74,20 +75,27 @@ npm install
 npm install --prefix server
 ```
 
-### 1. Configurer PostgreSQL
+### 1. Configurer MySQL
 
-Créer une base nommée `stock_manager`, puis préparer la configuration du
-serveur :
+Créer une base nommée `stock_manager` dans MySQL Workbench, ou exécuter :
+
+```sql
+CREATE DATABASE IF NOT EXISTS stock_manager
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+```
+
+Préparer ensuite la configuration du serveur :
 
 ```bash
 cp server/.env.example server/.env
 ```
 
-Adapter ensuite `server/.env` avec les identifiants PostgreSQL locaux :
+Adapter ensuite `server/.env` avec les identifiants MySQL locaux :
 
 ```dotenv
 PORT=3000
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/stock_manager?schema=public"
+DATABASE_URL="mysql://USER:PASSWORD@localhost:3306/stock_manager"
 ```
 
 Créer les tables et ajouter les neuf produits de démonstration :
@@ -169,7 +177,7 @@ base afin que le stock ne puisse pas devenir négatif.
 
 ## Vérifications
 
-La base PostgreSQL doit être démarrée avant le test d’intégration.
+Le serveur MySQL doit être démarré avant le test d’intégration.
 
 ```bash
 # Vérifier TypeScript côté mobile et serveur
@@ -196,8 +204,8 @@ temporaire est supprimé automatiquement à la fin.
 - Les appels HTTP sont regroupés dans un service `fetch` unique et configurable.
 - Les responsabilités de l’API sont séparées entre routes, contrôleurs et
   services sans multiplier les couches.
-- PostgreSQL garantit la persistance, l’unicité des références et les quantités
-  positives. La sortie de stock est atomique pour éviter une course entre deux
+- MySQL garantit la persistance, l’unicité des références et des quantités non
+  négatives. La sortie de stock est atomique pour éviter une course entre deux
   requêtes.
 - Le tableau de bord et les notifications, indiqués comme bonus dans l’énoncé,
   ne sont volontairement pas inclus afin de privilégier les fonctionnalités
