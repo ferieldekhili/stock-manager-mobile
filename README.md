@@ -1,7 +1,6 @@
 # Stock Manager
 
-Application mobile de gestion de stock réalisée dans le cadre d’un exercice
-technique de recrutement. Elle permet de consulter les produits d’un entrepôt,
+Application mobile de gestion de stock qui permet de consulter les produits d’un entrepôt,
 de rechercher et filtrer le catalogue, de gérer les entrées et sorties de stock,
 ainsi que de créer ou modifier un produit.
 
