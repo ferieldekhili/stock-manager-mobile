@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import FormField from '../components/FormField';
+import ScreenState from '../components/ScreenState';
 import type { RootStackScreenProps } from '../navigation/types';
 import { createProduct, getProduct, updateProduct } from '../services/api';
 import type { CreateProductInput } from '../types/product';
@@ -170,6 +171,7 @@ export default function ProductFormScreen({
     setSubmitError(null);
 
     if (!validation.input) {
+      setSubmitError('Vérifiez les champs indiqués avant de continuer.');
       return;
     }
 
@@ -197,10 +199,7 @@ export default function ProductFormScreen({
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
-        <View style={styles.centeredState}>
-          <ActivityIndicator color="#2563EB" size="large" />
-          <Text style={styles.stateTitle}>Chargement du produit...</Text>
-        </View>
+        <ScreenState loading title="Chargement du produit..." />
       </SafeAreaView>
     );
   }
@@ -208,20 +207,12 @@ export default function ProductFormScreen({
   if (loadError) {
     return (
       <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
-        <View style={styles.centeredState}>
-          <Text style={styles.stateTitle}>Chargement impossible</Text>
-          <Text style={styles.stateMessage}>{loadError}</Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void loadProduct()}
-            style={({ pressed }) => [
-              styles.submitButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Text style={styles.submitButtonText}>Réessayer</Text>
-          </Pressable>
-        </View>
+        <ScreenState
+          actionLabel="Réessayer"
+          message={loadError}
+          onAction={() => void loadProduct()}
+          title="Chargement impossible"
+        />
       </SafeAreaView>
     );
   }
@@ -345,26 +336,6 @@ const styles = StyleSheet.create({
   },
   form: {
     marginTop: 24,
-  },
-  centeredState: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 32,
-  },
-  stateTitle: {
-    color: '#111827',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  stateMessage: {
-    color: '#6B7280',
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
-    textAlign: 'center',
   },
   submitError: {
     color: '#B91C1C',

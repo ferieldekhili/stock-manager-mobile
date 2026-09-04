@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import ScreenState from '../components/ScreenState';
 import StockBadge from '../components/StockBadge';
 import type { RootStackScreenProps } from '../navigation/types';
 import { getProduct, updateStock } from '../services/api';
@@ -138,33 +139,20 @@ export default function ProductDetailScreen({
   if (isLoading && product === null) {
     return (
       <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
-        <View style={styles.centeredState}>
-          <ActivityIndicator color="#2563EB" size="large" />
-          <Text style={styles.stateTitle}>Chargement du produit...</Text>
-        </View>
+        <ScreenState loading title="Chargement du produit..." />
       </SafeAreaView>
     );
   }
 
-  if (error || product === null) {
+  if (product === null) {
     return (
       <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
-        <View style={styles.centeredState}>
-          <Text style={styles.stateTitle}>Produit indisponible</Text>
-          <Text style={styles.stateMessage}>
-            {error ?? 'Ce produit est introuvable.'}
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void loadProduct()}
-            style={({ pressed }) => [
-              styles.primaryButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Text style={styles.primaryButtonText}>Réessayer</Text>
-          </Pressable>
-        </View>
+        <ScreenState
+          actionLabel="Réessayer"
+          message={error ?? 'Ce produit est introuvable.'}
+          onAction={() => void loadProduct()}
+          title="Produit indisponible"
+        />
       </SafeAreaView>
     );
   }
@@ -186,6 +174,18 @@ export default function ProductDetailScreen({
             alertThreshold={product.alertThreshold}
           />
         </View>
+
+        {error ? (
+          <View accessibilityLiveRegion="polite" style={styles.errorBanner}>
+            <Text style={styles.errorBannerText}>{error}</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => void loadProduct()}
+            >
+              <Text style={styles.errorBannerAction}>Réessayer</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         <View style={styles.stockCard}>
           <View>
@@ -456,25 +456,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
-  centeredState: {
+  errorBanner: {
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 32,
-  },
-  stateTitle: {
-    color: '#111827',
-    fontSize: 18,
-    fontWeight: '700',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+    borderRadius: 10,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
     marginTop: 16,
-    textAlign: 'center',
+    padding: 12,
   },
-  stateMessage: {
-    color: '#6B7280',
-    fontSize: 15,
-    lineHeight: 22,
-    marginTop: 8,
-    textAlign: 'center',
+  errorBannerText: {
+    color: '#991B1B',
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  errorBannerAction: {
+    color: '#B91C1C',
+    fontSize: 13,
+    fontWeight: '700',
   },
   primaryButton: {
     alignItems: 'center',

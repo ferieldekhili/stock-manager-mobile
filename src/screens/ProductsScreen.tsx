@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   ScrollView,
@@ -12,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import ProductCard from '../components/ProductCard';
+import ScreenState from '../components/ScreenState';
 import SearchBar from '../components/SearchBar';
 import type { RootStackScreenProps } from '../navigation/types';
 import { getProducts } from '../services/api';
@@ -79,31 +79,20 @@ export default function ProductsScreen({ navigation }: ProductsScreenProps) {
   if (isLoading && products.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
-        <View style={styles.centeredState}>
-          <ActivityIndicator color="#2563EB" size="large" />
-          <Text style={styles.stateTitle}>Chargement des produits...</Text>
-        </View>
+        <ScreenState loading title="Chargement des produits..." />
       </SafeAreaView>
     );
   }
 
-  if (error) {
+  if (error && products.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
-        <View style={styles.centeredState}>
-          <Text style={styles.stateTitle}>Chargement impossible</Text>
-          <Text style={styles.stateMessage}>{error}</Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => void loadProducts()}
-            style={({ pressed }) => [
-              styles.retryButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Text style={styles.retryButtonText}>Réessayer</Text>
-          </Pressable>
-        </View>
+        <ScreenState
+          actionLabel="Réessayer"
+          message={error}
+          onAction={() => void loadProducts()}
+          title="Chargement impossible"
+        />
       </SafeAreaView>
     );
   }
@@ -157,6 +146,18 @@ export default function ProductsScreen({ navigation }: ProductsScreenProps) {
             </View>
 
             <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+
+            {error ? (
+              <View accessibilityLiveRegion="polite" style={styles.errorBanner}>
+                <Text style={styles.errorBannerText}>{error}</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => void loadProducts()}
+                >
+                  <Text style={styles.errorBannerAction}>Réessayer</Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             <Text style={styles.filterLabel}>Catégorie</Text>
             <ScrollView
@@ -313,12 +314,6 @@ const styles = StyleSheet.create({
   categoryButtonTextSelected: {
     color: '#1D4ED8',
   },
-  centeredState: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    padding: 32,
-  },
   emptyState: {
     alignItems: 'center',
     flex: 1,
@@ -340,16 +335,26 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  retryButton: {
-    backgroundColor: '#2563EB',
+  errorBanner: {
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
     borderRadius: 10,
-    marginTop: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+    padding: 12,
   },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
+  errorBannerText: {
+    color: '#991B1B',
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  errorBannerAction: {
+    color: '#B91C1C',
+    fontSize: 13,
     fontWeight: '700',
   },
 });
